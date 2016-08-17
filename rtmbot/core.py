@@ -28,7 +28,8 @@ class RtmBot(object):
         self.config = config
 
         # set slack token
-        self.token = config.get('SLACK_TOKEN')
+        # self.token = config.get('SLACK_TOKEN')
+        self.token = os.environ.get('SLACK_BOT_TOKEN')
 
         # set working directory for loading plugins or other files
         working_directory = os.path.dirname(sys.argv[0])
