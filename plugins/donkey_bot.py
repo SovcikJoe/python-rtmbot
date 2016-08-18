@@ -36,8 +36,8 @@ def process_message(data):
             print('handling command')
             handle_command(text,channel)
 
-def catch_all(data):
-    print(data)
+# def catch_all(data):
+#     print(data)
 
 def handle_command(command, channel):
     """
