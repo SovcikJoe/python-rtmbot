@@ -52,8 +52,8 @@ Thank you for listening,
 
 Your truely,
 
-badass
-''' + AT_BOT
+badass, Me :)
+'''
 
 RESPONSE_NO_CLUE = "Not sure what you mean. Use the *" + COMMAND_HELP + \
            "* command to see help"
