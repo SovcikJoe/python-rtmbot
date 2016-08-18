@@ -1,5 +1,4 @@
 *.pyc
-/rtmbot.conf
 /build/**
 *.log
 env
