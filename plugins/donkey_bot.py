@@ -20,9 +20,9 @@ logging.basicConfig(filename=log_file,
 logging.info('Initialized in: {}'.format('NOW'))
 
 AVAILABLE_BIKES_CONST = 2
-# DEFAULT_CHANNEL = 'G1ZVAVC0N'
+DEFAULT_CHANNEL = 'G1ZVAVC0N'
 # Test channel
-DEFAULT_CHANNEL = 'C22GY3D7G'
+# DEFAULT_CHANNEL = 'C22GY3D7G'
 
 outputs = []
 crontable = []
