@@ -9,4 +9,4 @@ env
 tests/.cache
 .coverage
 .cache
-plugins/dunkey_const.py
+/plugins/dunkey_const.py
