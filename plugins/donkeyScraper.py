@@ -63,7 +63,8 @@ class DonkeyScraper():
                 critical_battery_bikes = int(battery.text.strip())
             if self.BATTERY_GOOD in battery['title']:
                 good_battery_bikes = int(battery.text.strip())
-        return good_battery_bikes,low_battery_bikes,critical_battery_bikes
+                # TODO: Not working with format
+        return (good_battery_bikes,low_battery_bikes,critical_battery_bikes)
 
     def get_dashboard(self,response):
         return BeautifulSoup(response.text,'html.parser')

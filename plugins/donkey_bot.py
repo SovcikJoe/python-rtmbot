@@ -9,6 +9,9 @@ import requests
 import logging
 import time
 
+from slackclient import SlackClient
+import os
+
 # establish logging
 log_file ='rtmbot.log'
 logging.basicConfig(filename=log_file,
@@ -17,19 +20,29 @@ logging.basicConfig(filename=log_file,
 logging.info('Initialized in: {}'.format('NOW'))
 
 AVAILABLE_BIKES_CONST = 2
-DEFAULT_CHANNEL = 'G1ZVAVC0N'
+# DEFAULT_CHANNEL = 'G1ZVAVC0N'
+# Test channel
+DEFAULT_CHANNEL = 'C22GY3D7G'
 
 outputs = []
 crontable = []
 
-crontable.append([10*60,'check_hired_interval'])
-crontable.append([24*60*60,'daily_update'])
-
+crontable.append([13*60,'check_hired_interval'])
+crontable.append([60*60,'daily_update'])
+loggedIn = None
 ds = donkeyScraper.DonkeyScraper()
+while loggedIn == None:
+    print('logging in loop')
+    loggedIn = ds.login_to_dashboard()
+
+# Use admin token to be able to delete not just Bots messages
+# Don't push to git your Token
+slack_client = SlackClient(os.environ.get('SLACK-BOT_TOKEN'))
 
 def process_message(data):
     channel = data['channel']
-    text = data['text']
+    if 'text' in data.keys():
+        text = data['text']
     print('processing message')
     if channel and text:
         if donkey_const.AT_BOT in text:
@@ -45,28 +58,53 @@ def handle_command(command, channel):
         are valid commands. If so, then acts on the commands. If not,
         returns back what it needs for clarification.
     """
-    logging.info('handle_command running...')
+    # logging.info('handle_command running...')
+    print('handle_command running...')
+
     global AVAILABLE_BIKES_CONST
     response = donkey_const.RESPONSE_NO_CLUE
 
     if command.startswith(donkey_const.EXAMPLE_COMMAND):
         response = "Working...write some more code then I can do whatever you want met to. Wink Wink!"
+        print('example command')
+    if donkey_const.COMMAND_DELETE_ALL in command:
+        del_all_msges(channel)
+        response = donkey_const.RESPONSE_DELETED_ALL
+    if donkey_const.COMMAND_DAILY in command:
+        daily_update()
     if donkey_const.COMMAND_HIRED in command:
         response = get_response_for_hired(check_hired_status())
+        print('hired command')
     if donkey_const.COMMAND_REVENUE in command:
-        dash = ds.get_dashboard(ds.login_to_dashboard())
+        dash = ds.get_dashboard(loggedIn)
         # outputs.append([channel,donkey_const.RESPONSE_REVENUE.format(ds.find_revenue(dash))])
         response = donkey_const.RESPONSE_REVENUE.format(ds.find_revenue(dash))
+        print('revenue command')
     if donkey_const.COMMAND_BATTERY_LEVEL in command:
-        dash = ds.get_dashboard(ds.login_to_dashboard())
+        dash = ds.get_dashboard(loggedIn)
         # outputs.append([channel,donkey_const.RESPONSE_BATTERY.format(a,b,c=ds.check_battery_level(dash))])
-        response = donkey_const.RESPONSE_BATTERY.format(a,b,c=ds.check_battery_level(dash))
+        a,b,c = ds.check_battery_level(dash)
+        response = donkey_const.RESPONSE_BATTERY.format(a,b,c)
+        print('battery level command')
 
-    logging.info('Adding to outputs list')
+    # logging.info('Adding to outputs list')
+    # print(response)
+    print('Adding to outputs list')
     outputs.append([channel,response])
 
+def del_all_msges(channel):
+    if slack_client.rtm_connect():
+        messages = slack_client.api_call('channels.history',channel=channel,count=1000)['messages']
+        for msg in messages:
+            del_msg(msg['ts'],channel)
+
+def del_msg(ts,channel):
+    # FIXME: Why does this differ from Slack documentation?
+    slack_client.api_call('chat.delete',channel=channel,ts=ts)
+
 def daily_update():
-    dash = ds.get_dashboard(ds.login_to_dashboard())
+    print('daily update')
+    dash = ds.get_dashboard(loggedIn)
     hired = check_hired_status()
     gd,low,crit = ds.check_battery_level(dash)
     rev = ds.find_revenue(dash)
@@ -80,13 +118,16 @@ def daily_update():
 
 
 def check_hired_interval():
+    print('Check hired interval')
     global AVAILABLE_BIKES_CONST
     available_bikes = check_hired_status()
     if available_bikes == AVAILABLE_BIKES_CONST:
         # Nothing changed
         return
     else:
+        dash = ds.get_dashboard(loggedIn)
         response = donkey_const.STATUS_CHANGED + get_response_for_hired(available_bikes)
+        response += donkey_const.RESPONSE_REVENUE.format(ds.find_revenue(dash))
         AVAILABLE_BIKES_CONST = available_bikes
         outputs.append([DEFAULT_CHANNEL,response])
 
