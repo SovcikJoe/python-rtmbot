@@ -41,10 +41,11 @@ slack_client = SlackClient(os.environ.get('SLACK-BOT_TOKEN'))
 
 def process_message(data):
     channel = data['channel']
+    text = ''
     if 'text' in data.keys():
         text = data['text']
     print('processing message')
-    if channel and text:
+    if channel and text !='':
         if donkey_const.AT_BOT in text:
             print('handling command')
             handle_command(text,channel)
