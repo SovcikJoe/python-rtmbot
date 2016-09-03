@@ -28,7 +28,7 @@ outputs = []
 crontable = []
 
 crontable.append([13*60,'check_hired_interval'])
-crontable.append([60*60,'daily_update'])
+crontable.append([24*60*60,'daily_update'])
 loggedIn = None
 ds = donkeyScraper.DonkeyScraper()
 while loggedIn == None:
